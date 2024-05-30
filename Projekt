@@ -1,0 +1,45 @@
+#!/usr/bin/bash
+
+echo "Podaj ilosc uzytkownikow"
+read x
+
+for ((i=1; i<=x; i++))
+do
+sudo useradd  "user$i"
+sudo passwd "user$i" "password$i"
+
+echo "user$i" o hasle "password$i"  zostal utworzony.
+done
+
+y=$(($x/2))
+sudo groupadd "studenci_informatyki"
+sudo groupadd "studenci_etyki"
+
+for((i=1; i<=(x/2); i++))
+do
+#sudo groupadd "studenci_informatyki"
+sudo usermod -aG "studenci_informatyki" "user$i"
+done
+echo Uzytkownikow 1-$y przypisano do grupy Informatyka
+
+
+for ((i=(y+1); i<=x; i++))
+do
+#sudo groupadd "studenci_etyki"
+sudo usermod -aG "studenci_etyki" "user$i"
+done
+echo Uzytkownikow $y - $x przypisano do grupy Etyka
+
+echo Czy chciabys wyswietlic informacje o kontach? t/n
+read q
+
+"$t"=true
+"$n"=false
+
+if ["$q"=true];  then
+ls -l | grep pass 
+
+else
+echo Czy chciabys wyswietlic informacje o grupach? t/n
+
+fi
