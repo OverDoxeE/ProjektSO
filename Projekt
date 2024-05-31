@@ -30,16 +30,34 @@ sudo usermod -aG "studenci_etyki" "user$i"
 done
 echo Uzytkownikow $y - $x przypisano do grupy Etyka
 
-echo Czy chciabys wyswietlic informacje o kontach? t/n
-read q
+echo "Czy chciabys wyswietlic informacje o kontach? t/n"
+read qa
 
-"$t"=true
-"$n"=false
+ok="t"
+no="n"
 
-if ["$q"=true];  then
-ls -l | grep pass
+if [[ "$qa" == "$ok" ]]; then
+echo "Lista uzytkownikow"
+cut -d: -f1 /etc/passwd
+echo ""
 
+echo "informacje o uzytkownikach"
+for ((j=1;j<=x;j++))
+do
+id user$j
+done
+echo ""
+
+echo "Lista grup"
+cut -d: -f1 /etc/group
+echo ""
+
+echo "informacje o grupach"
+getent group studenci_informatyki
+getent group studenci_etyki
+elif [[ "$qa" == "$no" ]]; then
+echo "wybrales nie"
 else
-echo Czy chciabys wyswietlic informacje o grupach? t/n
 
+echo "Nie udala sie"
 fi
