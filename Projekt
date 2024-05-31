@@ -37,7 +37,7 @@ read q
 "$n"=false
 
 if ["$q"=true];  then
-ls -l | grep pass 
+ls -l | grep pass
 
 else
 echo Czy chciabys wyswietlic informacje o grupach? t/n

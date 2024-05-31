@@ -6,8 +6,10 @@ read x
 for ((i=1;i<=1;i++))
 do
 sudo deluser "user$i"
-echo "user$i zostal usuniety"
+
+echo "user$i" zostal usuniety
 done
+
 sudo delgroup "studenci_informatyki"
 echo "studenci_informatyki usunieci"
 sudo delgroup "studenci_etyki"
