@@ -1,0 +1,46 @@
+#!/usr/bin/bash
+
+function ipadmin {
+  echo "Dostepne interfejsy sieciowe"
+  ifconfig
+  echo "Dostepne interfejsy bezprzewodowe"
+  iwconfig
+  echo "Czy chcesz modyfikowac ustawienia karty sieciowej? t/n"
+
+ while true; do
+	PS3="Wybierz opcje: "
+	options=("1" "2" "3" "4")
+	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-wyjdz"
+
+ select opt in "${options[@]}"; do
+ case $opt in
+	"1")
+	 echo "wybrales opcje 1"
+	 echo ""
+ break
+ ;;
+	"2")
+	 echo "wybrales opcje 2"
+	echo ""
+ break
+ ;;
+	"3")
+	 echo "Wybrales opcje 3"
+	echo ""
+ break
+ ;;
+	"4")
+	 echo "do widzenia"
+	echo ""
+     exit 0
+ ;;
+ *)
+	echo "podano zla wartosc wybierz miedzy 1-4"
+	echo ""
+ ;;
+   esac
+ done
+done
+}
+
+ipadmin
