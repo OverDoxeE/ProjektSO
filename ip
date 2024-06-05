@@ -1,41 +1,70 @@
 #!/usr/bin/bash
 
 function ipadmin {
+
+	function podstawowedane {
+	ifcnfing > tmp/network_backup.txt
+	route -n > /tmp/route.backup.txt
+	cp /etc/resolv.conf /tmp/resolv.conf.backup
+	}
+	function przywroc {
+	ifconfig $(awk '/flags/{print $1}' /tmp/
   echo "Dostepne interfejsy sieciowe"
-  ifconfig
+  ifconfig -a
   echo "Dostepne interfejsy bezprzewodowe"
   iwconfig
   echo "Czy chcesz modyfikowac ustawienia karty sieciowej? t/n"
+read x
 
- while true; do
+ while [ "$x" == "t" ] ; do
 	PS3="Wybierz opcje: "
-	options=("1" "2" "3" "4")
-	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-wyjdz"
+	options=("1" "2" "3" "4" "5")
+	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-przywroc ustawienia domyslne  5-wyjdz"
 
  select opt in "${options[@]}"; do
  case $opt in
 	"1")
-	 echo "wybrales opcje 1"
+	 read -p "Podaj nazwe interfejsu: " iface
+         read -p "Podaj adres IP:  " ip
+	 read -p "Podaj maske sieci: " mask
+	 read -p "Podaj brame: " brama
+ 	 read -p "Podaj DNS: " dns
+	sudo ifconfig $iface $ip netmask $mask
+	sudo route add default via $gateway
+	echo "nameserver $dns" | sudo tee /etc/resolv.conf > /dev/null
+	echo "reczne przypisanie ustawien IP dla $iface"
 	 echo ""
  break
  ;;
 	"2")
-	 echo "wybrales opcje 2"
+	  read -p "Podaj nazwe interfejsu: " iface
+	sudo dhclient $iface
+	echo "Automatyczne przypisane ustawienia IP dla $iface"
 	echo ""
  break
  ;;
 	"3")
-	 echo "Wybrales opcje 3"
+	 echo "aktualna konfiguracja inrerfejsow sieciowych"
+	ifconfig
+	echo ""
+	echo "tabela routingu"
+	route -n
+	echo "aktualne ustawienia DNS"
+	cat /etc/resolv.conf
 	echo ""
  break
  ;;
 	"4")
+
+ break
+ ;;
+	"5")
 	 echo "do widzenia"
 	echo ""
      exit 0
  ;;
  *)
-	echo "podano zla wartosc wybierz miedzy 1-4"
+	echo "podano zla wartosc wybierz miedzy 1-5"
 	echo ""
  ;;
    esac
