@@ -1,14 +1,44 @@
 #!/usr/bin/bash
 
 function ipadmin {
-
-	function podstawowedane {
-	ifcnfing > tmp/network_backup.txt
-	route -n > /tmp/route.backup.txt
-	cp /etc/resolv.conf /tmp/resolv.conf.backup
+	function przypisanie_zmiennych {
+	Backup_dir="/tmp/network_backup"
+	Network_backup = "$Backup_dir/network_backup.txt"
+	Route_backup = "$Backup_dir/route_backup.txt"
+	Resolve_backup = "$Backup_dir/resolve.conf.backup"
 	}
+
+	function podstawowe_dane {
+	ifcnfing > "$Network_backup"
+	route -n > "$Route_backup"
+	cp /etc/resolv.conf "$Resolve_backup"
+	}
+
 	function przywroc {
-	ifconfig $(awk '/flags/{print $1}' /tmp/
+ 	 if [[ -f "$network_backup" && -f "$Route_backup" && -f "Resolve_backup" ]]; then
+	echo "przywracam poprzednie ustawienia sieci: "
+	ifconfig $(awk '/flags/{print $1}' "$Network_backup"  | sed 's/://') $(awk '/inet/{print $2}' "$Network_backup")
+	ifconfig $(awk '/netmask/{print $4}' "$Network_backup")
+	route add defoult gw $(awk '/UG/{print $2}' "$Route_backup")
+	cp /tmp/resolv.conf.backup "$Resolve_backup"
+	echo "przywrocono poprzednie ustawienia"
+	else
+	echo "nie znaleziono plikow backupu"
+	fi
+	}
+
+	function sprawdzenie {
+	if ping -c 3 www.google.pl ; then
+	  echo "Ustawienia sieciowe sa poprawne"
+	else
+	  echo "Ustawienia sieciowe sa niepoprawne przywracam poprzednie ustawienia"
+	przywroc
+	fi  }
+
+	echo "Tworzenie katalogu do przechowywania wstepnych ustawien sieciowych backup"
+	mkdir -p "Backup_dir"
+	przypisanie_zmiennych
+
   echo "Dostepne interfejsy sieciowe"
   ifconfig -a
   echo "Dostepne interfejsy bezprzewodowe"
@@ -19,46 +49,62 @@ read x
  while [ "$x" == "t" ] ; do
 	PS3="Wybierz opcje: "
 	options=("1" "2" "3" "4" "5")
-	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-przywroc ustawienia domyslne  5-wyjdz"
+	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-przywroc poprzednie ustawienia  5-wyjdz"
 
  select opt in "${options[@]}"; do
  case $opt in
 	"1")
+	podstawowe_dane
 	 read -p "Podaj nazwe interfejsu: " iface
          read -p "Podaj adres IP:  " ip
 	 read -p "Podaj maske sieci: " mask
 	 read -p "Podaj brame: " brama
  	 read -p "Podaj DNS: " dns
+
 	sudo ifconfig $iface $ip netmask $mask
 	sudo route add default via $gateway
-	echo "nameserver $dns" | sudo tee /etc/resolv.conf > /dev/null
+	echo "nameserver $dns" | sudo tee /etc/resolv.conf
 	echo "reczne przypisanie ustawien IP dla $iface"
+	sprawdzenie
 	 echo ""
  break
  ;;
 	"2")
+	podstawowe_dane
 	  read -p "Podaj nazwe interfejsu: " iface
 	sudo dhclient $iface
 	echo "Automatyczne przypisane ustawienia IP dla $iface"
+	sprawdzenie
 	echo ""
  break
  ;;
 	"3")
-	 echo "aktualna konfiguracja inrerfejsow sieciowych"
+	 echo "aktualna konfiguracja inrerfejsow sieciowych: "
 	ifconfig
 	echo ""
-	echo "tabela routingu"
+	echo "tabela routingu: "
 	route -n
-	echo "aktualne ustawienia DNS"
+	echo ""
+	echo "aktualne ustawienia DNS: "
 	cat /etc/resolv.conf
+	echo ""
+	echo "informacje o wszystkich polaczeniach sieciowych: "
+	sudo netstat -a
+	echo ""
+	echo "Informacje o obecnie dostepnych polaczeniach sieciowych, info o portach: "
+	sudo netstat -tapen | more
 	echo ""
  break
  ;;
 	"4")
+	przywroc
+	echo "przywrocono domyslne ustawienia sieciowe"
 
  break
  ;;
 	"5")
+	echo "usuniecie katalogu backup"
+	rm -rf "$Backup_dir"
 	 echo "do widzenia"
 	echo ""
      exit 0
