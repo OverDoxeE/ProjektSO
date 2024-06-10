@@ -17,12 +17,12 @@ function ipadmin {
 	}
 
 	function przywroc {
- 	 if [[ -f "$network_backup" && -f "$Route_backup" && -f "Resolve_backup" ]]; then
+ 	 if [[ -f "$Network_backup" && -f "$Route_backup" && -f "$Resolve_backup" ]]; then
 	echo "przywracam poprzednie ustawienia sieci: "
 	ifconfig $(awk '/flags/{print $1}' "$Network_backup"  | sed 's/://') $(awk '/inet/{print $2}' "$Network_backup")
 	ifconfig $(awk '/netmask/{print $4}' "$Network_backup")
-	route add defoult gw $(awk '/UG/{print $2}' "$Route_backup")
-	cp "$Resolve_backup" /etc/resolv.conf 
+	route add default gw $(awk '/UG/{print $2}' "$Route_backup")
+	cp "$Resolve_backup" /etc/resolv.conf
 	echo "przywrocono poprzednie ustawienia"
 	else
 	echo "nie znaleziono plikow backupu"
@@ -38,7 +38,6 @@ function ipadmin {
 	fi  }
 
 	echo "Tworzenie katalogu do przechowywania wstepnych ustawien sieciowych backup"
-	mkdir -p "Backup_dir"
 	przypisanie_zmiennych
 
   echo "Dostepne interfejsy sieciowe"
