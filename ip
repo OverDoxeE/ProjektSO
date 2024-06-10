@@ -3,12 +3,14 @@
 function ipadmin {
 	function przypisanie_zmiennych {
 	Backup_dir="/tmp/network_backup"
+	mkdir -p "$Backup_dir"
 	Network_backup = "$Backup_dir/network_backup.txt"
 	Route_backup = "$Backup_dir/route_backup.txt"
 	Resolve_backup = "$Backup_dir/resolve.conf.backup"
 	}
 
 	function podstawowe_dane {
+	przypisanie_zmiennych
 	ifcnfing > "$Network_backup"
 	route -n > "$Route_backup"
 	cp /etc/resolv.conf "$Resolve_backup"
@@ -20,7 +22,7 @@ function ipadmin {
 	ifconfig $(awk '/flags/{print $1}' "$Network_backup"  | sed 's/://') $(awk '/inet/{print $2}' "$Network_backup")
 	ifconfig $(awk '/netmask/{print $4}' "$Network_backup")
 	route add defoult gw $(awk '/UG/{print $2}' "$Route_backup")
-	cp /tmp/resolv.conf.backup "$Resolve_backup"
+	cp "$Resolve_backup" /etc/resolv.conf 
 	echo "przywrocono poprzednie ustawienia"
 	else
 	echo "nie znaleziono plikow backupu"
