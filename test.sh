@@ -24,9 +24,9 @@ function ipadmin {
         while read -r line; do
         if [[ $line =~ ^([a-zA-Z0-9]+):\ flags ]]; then
                 iface="${BASH_REMATCH[1]}"
-        elif [[ $line =~ inet\ (inet\ ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        elif [[ $line =~ inet\ ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
                 ip="${BASH_REMATCH[1]}"
-        elif [[ $line =~ netmask\  ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        elif [[ $line =~ netmask\ ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
                 netmask="${BASH_REMATCH[1]}"
         fi
         done < "$Network_backup"
