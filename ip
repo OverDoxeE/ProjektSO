@@ -4,14 +4,14 @@ function ipadmin {
 	function przypisanie_zmiennych {
 	Backup_dir="/tmp/network_backup"
 	mkdir -p "$Backup_dir"
-	Network_backup = "$Backup_dir/network_backup.txt"
-	Route_backup = "$Backup_dir/route_backup.txt"
-	Resolve_backup = "$Backup_dir/resolve.conf.backup"
+	Network_backup="$Backup_dir/network_backup.txt"
+	Route_backup="$Backup_dir/route_backup.txt"
+	Resolve_backup="$Backup_dir/resolve.conf.backup"
 	}
 
 	function podstawowe_dane {
 	przypisanie_zmiennych
-	ifcnfing > "$Network_backup"
+	ifconfig > "$Network_backup"
 	route -n > "$Route_backup"
 	cp /etc/resolv.conf "$Resolve_backup"
 	}
@@ -59,11 +59,11 @@ read x
 	 read -p "Podaj nazwe interfejsu: " iface
          read -p "Podaj adres IP:  " ip
 	 read -p "Podaj maske sieci: " mask
-	 read -p "Podaj brame: " brama
+	 read -p "Podaj brame: " gateway
  	 read -p "Podaj DNS: " dns
 
 	sudo ifconfig $iface $ip netmask $mask
-	sudo route add default via $gateway
+	sudo route add default gw $gateway
 	echo "nameserver $dns" | sudo tee /etc/resolv.conf
 	echo "reczne przypisanie ustawien IP dla $iface"
 	sprawdzenie
