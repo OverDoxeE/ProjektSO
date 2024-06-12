@@ -24,22 +24,29 @@ function ipadmin {
         while read -r line; do
         if [[ $line =~ ^([a-zA-Z0-9]+):\ flags ]]; then
                 iface="${BASH_REMATCH[1]}"
+                [[ $iface == "lo" ]] && continue
+                echo "Znaleziono interfejs: $iface"
         elif [[ $line =~ inet\ ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
                 ip="${BASH_REMATCH[1]}"
+                echo "Znaleziono adres IP: $ip"
         elif [[ $line =~ netmask\ ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ]]; then
                 netmask="${BASH_REMATCH[1]}"
+                echo "Znaleziono maske sieci: $netmask"
         fi
         done < "$Network_backup"
 
         if [[ -n $iface && -n $ip && -n $netmask ]]; then
                 sudo ifconfig "$iface" "$ip" netmask "$netmask"
+                echo "Przypisano adres IP: $ip i maske: $netmask do interfejsu: $iface"
         else
                 echo "Blad podczas przywracania ustawien interfejsu siciowego."
         fi
 
         gateway=$(awk '/UG/{print $2}' "$Route_backup")
         if [[ -n $gateway ]]; then
-                sudo route add defoult gw "$gateway"
+                if ping -c 1 -W 1 "$gateway"; then
+                sudo route add default gw "$gateway"
+                echo "Przypisano brame: $gateway"
         else
                 echo "blad podczas przywracania ustawien bramy"
         fi
@@ -49,10 +56,11 @@ function ipadmin {
     else
         echo "nie znaleziono plikow backupu"
        fi
+
         }
 
         function sprawdzenie {
-        if ping -c 3 www.google.pl ; then
+        if ping -c 3 www.google.pl; then
           echo "Ustawienia sieciowe sa poprawne"
         else
           echo "Ustawienia sieciowe sa niepoprawne przywracam poprzednie ustawienia"
@@ -69,7 +77,7 @@ function ipadmin {
   echo "Czy chcesz modyfikowac ustawienia karty sieciowej? t/n"
 read x
 
- while [ "$x" == "t" ] ; do
+ while [ "$x" == "t" ]; do
         PS3="Wybierz opcje: "
         options=("1" "2" "3" "4" "5")
         echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-przywroc poprzednie ustawienia  5-wyjdz"
