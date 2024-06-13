@@ -3,7 +3,7 @@
 function ipadmin {
         function iface_bool {
         local iface=$1
-        if ip link show "$iface"; then
+        if ip link show "$iface" > /dev/null 2>$1; then
         return 0
         else
          return 1
@@ -12,15 +12,16 @@ function ipadmin {
         function check_iface {
         while true; do
          read -p "Podaj nazwe interfejsu: " iface
-        iface_bool "$iface"; then
+        if iface_bool "$iface"; then
         echo "interfejs $iface  istnieje"
+        break
         else
         echo "interfejs $iface nie istnieje prosze podac poprawny interfejs: "
         fi
     done
         }
         function sprawdzenie {
-        if ping -c 3 www.google.pl; then
+        if ping -c 3 www.google.com; then
           echo "Ustawienia sieciowe sa poprawne"
                 return 0
         else
@@ -49,12 +50,12 @@ read x
          read -p "Podaj maske sieci: " mask
          read -p "Podaj brame: " gateway
          read -p "Podaj DNS: " dns
-
+        sudo dhclient -r $iface
         sudo ifconfig $iface $ip netmask $mask
         sudo route add default gw $gateway
         echo "nameserver $dns" | sudo tee /etc/resolv.conf
         echo "reczne przypisanie ustawien IP dla $iface"
-        if [sprawdzenie]; then
+        if sprawdzenie; then
                 echo "Poprawnie nadano ustawienia sieciowe"
         else
                 echo "Nadaje ustawienia sieciowe automatycznie za pomoca DHCP:  "
@@ -66,6 +67,7 @@ read x
  ;;
         "2")
           check_iface
+        sudo dhclient -r $iface
         sudo dhclient $iface
         echo "Automatyczne przypisane ustawienia IP dla $iface"
         sprawdzenie
@@ -81,9 +83,6 @@ read x
         echo ""
         echo "aktualne ustawienia DNS: "
         cat /etc/resolv.conf
-        echo ""
-        echo "informacje o wszystkich polaczeniach sieciowych: "
-        sudo netstat -a
         echo ""
         echo "Informacje o obecnie dostepnych polaczeniach sieciowych, info o portach: "
         sudo netstat -tapen | more
