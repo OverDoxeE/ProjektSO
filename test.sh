@@ -90,7 +90,46 @@ read x
  break
  ;;
         "4")
-        echo "ping, traceroute, ipconfig, ufw, netstat, ifconfig "
+        while true; do
+                PS3="Wybierz opcje konfiguracyjna: "
+                config_options=("1" "2" "3" "4" "5" "6")
+                echo "1-ping 2-traceroute 3-ifconfig  4-ufw 5-netstat 6-powrot"
+
+        select config_opt in "${config_options[@]}"; do
+        case $config_opt in
+                "1")
+                check_iface
+                read -p "Podaj adres do pingowania: " ping_addr
+                sudo ping -I $iface -c 4 $ping_addr
+                break
+                ;;
+                "2")
+                check_iface
+                read -p "Podaj adres do traceroute: " trace_addr
+                sudo traceroute -i $iface $trace_addr
+                break
+                ;;
+                "3")
+                ifconfig
+                break
+                ;;
+                "4")
+                sudo ufw status
+                break
+                ;;
+                "5")
+                sudo netstat -tapen | more
+                break
+                ;;
+                "6")
+                break 2
+                ;;
+                *)
+                echo "Podano zla wartosc, podaj wartosc z przedzialu 1-6"
+                ;;
+        esac
+   done
+done
  break
  ;;
         "5")
