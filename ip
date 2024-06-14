@@ -1,44 +1,34 @@
 #!/usr/bin/bash
 
 function ipadmin {
-	function przypisanie_zmiennych {
-	Backup_dir="/tmp/network_backup"
-	mkdir -p "$Backup_dir"
-	Network_backup="$Backup_dir/network_backup.txt"
-	Route_backup="$Backup_dir/route_backup.txt"
-	Resolve_backup="$Backup_dir/resolve.conf.backup"
-	}
-
-	function podstawowe_dane {
-	przypisanie_zmiennych
-	ifconfig > "$Network_backup"
-	route -n > "$Route_backup"
-	cp /etc/resolv.conf "$Resolve_backup"
-	}
-
-	function przywroc {
- 	 if [[ -f "$Network_backup" && -f "$Route_backup" && -f "$Resolve_backup" ]]; then
-	echo "przywracam poprzednie ustawienia sieci: "
-	ifconfig $(awk '/flags/{print $1}' "$Network_backup"  | sed 's/://') $(awk '/inet/{print $2}' "$Network_backup")
-	ifconfig $(awk '/netmask/{print $4}' "$Network_backup")
-	route add default gw $(awk '/UG/{print $2}' "$Route_backup")
-	cp "$Resolve_backup" /etc/resolv.conf
-	echo "przywrocono poprzednie ustawienia"
+	function iface_bool {
+	local iface=$1
+	if ip link show "$iface" > /dev/null 2>$1; then
+	return 0
 	else
-	echo "nie znaleziono plikow backupu"
+	 return 1
 	fi
-	}
-
-	function sprawdzenie {
-	if ping -c 3 www.google.pl ; then
-	  echo "Ustawienia sieciowe sa poprawne"
+}
+	function check_iface {
+	while true; do
+	 read -p "Podaj nazwe interfejsu: " iface
+	if iface_bool "$iface"; then
+	echo "interfejs $iface  istnieje"
+	break
 	else
-	  echo "Ustawienia sieciowe sa niepoprawne przywracam poprzednie ustawienia"
-	przywroc
+	echo "interfejs $iface nie istnieje prosze podac poprawny interfejs: "
+	fi
+    done
+	}
+	function sprawdzenie {
+	if ping -c 3 www.google.com; then
+	  echo "Ustawienia sieciowe sa poprawne"
+		return 0
+	else
+	  echo "Ustawienia sieciowe sa niepoprawne brak polaczenia"
+		return 1
 	fi  }
 
-	echo "Tworzenie katalogu do przechowywania wstepnych ustawien sieciowych backup"
-	przypisanie_zmiennych
 
   echo "Dostepne interfejsy sieciowe"
   ifconfig -a
@@ -47,32 +37,37 @@ function ipadmin {
   echo "Czy chcesz modyfikowac ustawienia karty sieciowej? t/n"
 read x
 
- while [ "$x" == "t" ] ; do
+ while [ "$x" == "t" ]; do
 	PS3="Wybierz opcje: "
 	options=("1" "2" "3" "4" "5")
-	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-przywroc poprzednie ustawienia  5-wyjdz"
+	echo "1-przypisz manualnie 2-przypisz automatycznie 3-wyswietl informacje o ustawieniach sieciowych 4-Uzyj funkcji konfiguracyjnych  5-wyjdz"
 
  select opt in "${options[@]}"; do
  case $opt in
 	"1")
-	podstawowe_dane
-	 read -p "Podaj nazwe interfejsu: " iface
+	check_iface
          read -p "Podaj adres IP:  " ip
 	 read -p "Podaj maske sieci: " mask
 	 read -p "Podaj brame: " gateway
  	 read -p "Podaj DNS: " dns
-
+	sudo dhclient -r $iface
 	sudo ifconfig $iface $ip netmask $mask
 	sudo route add default gw $gateway
 	echo "nameserver $dns" | sudo tee /etc/resolv.conf
 	echo "reczne przypisanie ustawien IP dla $iface"
-	sprawdzenie
-	 echo ""
+	if sprawdzenie; then
+		echo "Poprawnie nadano ustawienia sieciowe"
+	else
+	 	echo "Nadaje ustawienia sieciowe automatycznie za pomoca DHCP:  "
+		sudo dhclient $iface
+		echo "ponownie weryfikuje polaczenie z siecia"
+		ping -c 3 www.google.com
+	fi
  break
  ;;
 	"2")
-	podstawowe_dane
-	  read -p "Podaj nazwe interfejsu: " iface
+	  check_iface
+	sudo dhclient -r $iface
 	sudo dhclient $iface
 	echo "Automatyczne przypisane ustawienia IP dla $iface"
 	sprawdzenie
@@ -89,23 +84,55 @@ read x
 	echo "aktualne ustawienia DNS: "
 	cat /etc/resolv.conf
 	echo ""
-	echo "informacje o wszystkich polaczeniach sieciowych: "
-	sudo netstat -a
-	echo ""
 	echo "Informacje o obecnie dostepnych polaczeniach sieciowych, info o portach: "
 	sudo netstat -tapen | more
 	echo ""
  break
  ;;
 	"4")
-	przywroc
-	echo "przywrocono domyslne ustawienia sieciowe"
+	while true; do
+		PS3="Wybierz opcje konfiguracyjna: "
+		config_options=("1" "2" "3" "4" "5" "6")
+		echo "1-ping 2-traceroute 3-ifconfig  4-ufw 5-netstat 6-powrot"
 
+	select config_opt in "${config_options[@]}"; do
+	case $config_opt in
+		"1")
+		check_iface
+		read -p "Podaj adres do pingowania: " ping_addr
+		sudo ping -I $iface -c 4 $ping_addr
+		break
+		;;
+		"2")
+		check_iface
+		read -p "Podaj adres do traceroute: " trace_addr
+		sudo traceroute -i $iface $trace_addr
+		break
+		;;
+		"3")
+		ifconfig
+		break
+		;;
+		"4")
+		sudo ufw status
+		break
+		;;
+		"5")
+		sudo netstat -tapen | more
+		break
+		;;
+		"6")
+		break 2
+		;;
+		*)
+		echo "Podano zla wartosc, podaj wartosc z przedzialu 1-6"
+		;;
+	esac
+   done
+done
  break
  ;;
 	"5")
-	echo "usuniecie katalogu backup"
-	rm -rf "$Backup_dir"
 	 echo "do widzenia"
 	echo ""
      exit 0
