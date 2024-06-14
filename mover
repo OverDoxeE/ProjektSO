@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+
+function mover {
+
+ read -p "Podaj sciezke do poczatkowego folderu: " pierwszy_folder
+
+ read -p "Podaj sciezke do docelowego folderu: " docelowy_folder
+
+	if [ ! -d "$pierwszy_folder" ]; then
+    echo "folder poczatkowy nie istnieje prosze podac poprawna sciezke"
+	exit 1
+	fi
+
+	if [ ! -d "$docelowy_folder" ]; then
+    echo "folder docelowy nie istnieje, tworzenie folderu $docelowy_folder."
+	mkdir -p "$docelowy_foler"
+	fi
+	licznik=0
+	echo "Podaj wzorzec pliqkow do przeniesienia (np. *.txt , plik?)"
+	read pattern
+
+	for file in "$pierwszy_folder"/$pattern; do
+		if [ -f "$file" ]; then
+			mv "$file" "$docelowy_folder/"
+		echo "Plik $(basename "$file") zostal przeniesiony do $docelowy_folder"
+		((licznik++))
+	 fi
+     done
+	if [ $licznik -gt 0 ]; then
+		echo "Lacznie przenieniesiono $licznik plikow."
+	else
+		echo "Brak plikow zgodnych z wzorcem $pattern w folderze zrodlowym"
+	fi
+}
+
+mover
