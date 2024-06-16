@@ -10,9 +10,9 @@ baza_danych() {
 
         echo "Tworzenie naglowka bazy danych"
         for ((j=0; j<$kolumny; j++)); do
-                read -p "Podaj nazwe dla kolumny $((j+1)): " headers
-                        headers+=("$headers")
-                        withs+=(${#headers})
+                read -p "Podaj nazwe dla kolumny $((j+1)): " header
+                        headers+=("$header")
+                        witdhs+=(${#header})
                 done
 
         data=()
@@ -47,7 +47,7 @@ wyswietl_baze() {
 
         for row_index in "${wybrane_wiersze[@]}"; do
                 IFS='|' read -r -a values <<< "${data[$((row_index-1))]}"
-                for ((j=0; j<$kolumny; j++)) do
+                for ((j=0; j<$kolumny; j++)); do
                         if [[ " ${wybrane_kolumny[@]} " =~ " $j " ]]; then
                         printf "%-$[widths[$j]}s" "${values[$j]}"
                 if [ $j -lt $((kolumny-1)) ]; then
@@ -65,13 +65,13 @@ wyswietl_baze() {
         if [ "$odpRead" == "t" ]; then
                 wybrane_kolumny=($(seq 0 $((kolumny-1))))
                 wybrane_wiersze=($(seq 1 $wiersze))
-                wyswietl_baze wybrane_kolumny[@] wybrane_wiersze[@]
+                wyswietl_baze wybrane_wiersze[@] wybrane_kolumny[@]
         fi
 
 
         echo "Czy chcesz wyswietlic wybrane wiersze i kolumny? (t/n)"
         read odpSel
-        if [ "odpSel" == "t" ]; then
+        if [ "$odpSel" == "t" ]; then
                 echo "Podaj numery wierszy do wyswietlenia (oddzielone spacja): "
                 read -a wybrane_wiersze
                 echo "Podaj numery kolumn do wyswietlenia (oddzielone spacja, zaczynajac od 0): "
